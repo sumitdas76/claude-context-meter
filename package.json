@@ -1,6 +1,6 @@
 {
   "name": "claude-context-meter",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Claude Code status line: context usage, quota remaining, cache state, cost.",
   "license": "MIT",

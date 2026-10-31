@@ -30,6 +30,23 @@ Other things that can appear:
 The meter handles 200k and 1M context windows. Colours follow your terminal
 theme.
 
+### In-session alerts
+
+The status bar is easy to miss, so when the bar changes colour you also get
+a message in the conversation itself, right after Claude's reply:
+
+> 🟡 Context is 52% full (104k/200k). Compact soon: finish the current step,
+> then run /compact <what to keep>.
+
+> 🔴 Context is 78% full (156k/200k). Run /compact <what to keep> now, or
+> /clear if this task is done. Past this point replies get slower, costlier
+> and less accurate.
+
+Each message appears **once per level per session**, not after every reply.
+When usage drops (after `/compact`), the alerts reset and can fire again.
+This uses a Claude Code `Stop` hook (`notify.js`) that never blocks Claude
+and stays silent on any error. Turn it off with `--no-notify`.
+
 ### Optional parts
 
 Turn these on with flags (see [Install](#install)):
@@ -40,7 +57,7 @@ Turn these on with flags (see [Install](#install)):
 | `--cost`      | Session cost so far, e.g. `$2.69`.                                                                                                                                                                        |
 | `--no-legend` | Hides the colour key.                                                                                                                                                                                     |
 
-Why another status line? It's one ~170-line Node file you can read in a few
+Why another status line? It's two small Node files (~170 and ~140 lines) you can read in a few
 minutes, has no dependencies, never breaks your status bar (bad data shows
 `--`), and the installer won't overwrite a status line you already have.
 
@@ -66,15 +83,18 @@ git clone https://github.com/sumitdas76/claude-context-meter
 node claude-context-meter/skills/context-meter/install.js
 ```
 
-The installer copies `statusline.js` to `~/.claude/claude-context-meter/`,
-backs up `settings.json` to `settings.json.bak-claude-context-meter`, and adds
-the `statusLine` entry. It honours `CLAUDE_CONFIG_DIR`.
+The installer copies `statusline.js` and `notify.js` to
+`~/.claude/claude-context-meter/`, backs up `settings.json` to
+`settings.json.bak-claude-context-meter`, and adds the `statusLine` entry and
+a `Stop` hook. Your other hooks are kept as they are. It honours
+`CLAUDE_CONFIG_DIR`.
 
 | Installer flag                     | Effect                                                                               |
 | ---------------------------------- | ------------------------------------------------------------------------------------ |
 | _(none)_                           | Install. Exits with code 2 and changes nothing if another status line is configured. |
 | `--force`                          | Replace an existing status line (after backing up).                                  |
-| `--uninstall`                      | Remove it, only if the configured status line is this one.                           |
+| `--uninstall`                      | Remove the status line (only if it is this one) and the alert hook.                  |
+| `--no-notify`                      | Install without the [in-session alerts](#in-session-alerts).                         |
 | `--quota`, `--cost`, `--no-legend` | Passed through to the status line (see [Optional parts](#optional-parts)).           |
 
 Re-run the installer to change flags. Restart Claude Code if the meter doesn't

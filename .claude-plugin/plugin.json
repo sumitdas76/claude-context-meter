@@ -1,6 +1,6 @@
 {
   "name": "claude-context-meter",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Status line showing context-window usage, plan quota remaining, prompt-cache state and session cost.",
   "author": { "name": "sumitdas76" },
   "homepage": "https://github.com/sumitdas76/claude-context-meter",

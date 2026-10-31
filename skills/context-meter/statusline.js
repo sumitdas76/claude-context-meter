@@ -8,6 +8,7 @@
 "use strict";
 
 const fs = require("fs");
+const path = require("path");
 
 const RESET = "\x1b[0m";
 const RED = "\x1b[31m";
@@ -64,7 +65,8 @@ function sumInput(u) {
   );
 }
 
-function contextPart(d) {
+/** { pct, used, size } for the context window, or null when unknown. */
+function contextStats(d) {
   const cw = d.context_window || {};
   const size = cw.context_window_size || 200000;
   let used = null;
@@ -73,9 +75,27 @@ function contextPart(d) {
 
   let pct = typeof cw.used_percentage === "number" ? cw.used_percentage : null;
   if (pct == null && used != null) pct = (used / size) * 100;
-  if (pct == null) return "ctx --";
+  if (pct == null) return null;
+  return { pct: Math.min(100, Math.round(pct)), used, size };
+}
 
-  pct = Math.min(100, Math.round(pct));
+/** Save this session's usage so the Stop hook (notify.js) can alert on it. */
+function saveState(d, dir = path.join(__dirname, "state")) {
+  try {
+    const sid = d && d.session_id;
+    const stats = d && contextStats(d);
+    if (!stats || !sid || !/^[A-Za-z0-9_-]{1,128}$/.test(sid)) return;
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, `${sid}.json`), JSON.stringify(stats));
+  } catch {
+    // alerts are optional; never break the status line
+  }
+}
+
+function contextPart(d) {
+  const stats = contextStats(d);
+  if (!stats) return "ctx --";
+  const { pct, used, size } = stats;
   const tokens = used != null ? ` (${kTokens(used)}/${kTokens(size)})` : "";
   return `${colourFor(pct)}ctx ${bar(pct)} ${pct}%${tokens}${RESET}`;
 }
@@ -138,7 +158,7 @@ function render(d, nowMs = Date.now(), opts = DEFAULTS) {
   return parts.join(" | ");
 }
 
-module.exports = { render, parseFlags, timeUntil, bar };
+module.exports = { render, parseFlags, saveState, timeUntil, bar };
 
 if (require.main === module) {
   let raw = "";
@@ -153,6 +173,7 @@ if (require.main === module) {
     }
     try {
       process.stdout.write(render(d, Date.now(), parseFlags(process.argv.slice(2))));
+      saveState(d);
     } catch {
       process.stdout.write("Claude | ctx --");
     }

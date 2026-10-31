@@ -15,6 +15,7 @@ behaves. The installer and script live in this skill's base directory.
    - `--quota`: show 5-hour and 7-day plan quota left
    - `--cost`: show session cost
    - `--no-legend`: hide the colour key
+   - `--no-notify`: no in-session alert messages (they are on by default)
 2. If it exits with code 2, another status line is already configured. Show
    the user the existing command it printed and ask whether to replace it.
    Only with their yes, run again with `--force` (plus the same flags).
@@ -42,5 +43,13 @@ Also possible: yellow `cache cold → /compact or /clear` (prompt cache expired,
 so the next message re-reads everything at full price), and `ctx --` (no
 usage data yet). With `--quota`: `5h 42% left (53m) low`, where `low` means
 26–50% left and `very low → cheaper /model` means 25% or less.
+
+## In-session alerts
+
+A `Stop` hook (`notify.js`) shows a message in the session after Claude's
+reply the first time context reaches yellow (50%) and red (75%), once per
+level, resetting after usage drops. If the user sees one, help them act on
+it: suggest the `/compact` focus text for the current work, or `/clear` if
+the task is done (saving anything worth keeping first).
 
 Requires Node.js 18 or later.

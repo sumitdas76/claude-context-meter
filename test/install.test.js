@@ -95,3 +95,34 @@ test("display flags pass through; unknown flags are dropped", () => {
   const cmd = readJson(path.join(dir, "settings.json")).statusLine.command;
   assert.match(cmd, /statusline\.js" --quota --cost$/);
 });
+
+test("alert hook: added once, keeps other hooks, removed on uninstall", () => {
+  const dir = tmp();
+  const settings = path.join(dir, "settings.json");
+  const theirs = { hooks: [{ type: "command", command: "my-stop.sh" }] };
+  const pre = { matcher: "Bash", hooks: [{ type: "command", command: "guard.sh" }] };
+  fs.writeFileSync(settings, JSON.stringify({ hooks: { Stop: [theirs], PreToolUse: [pre] } }));
+
+  assert.equal(run(dir).status, 0);
+  assert.equal(run(dir).status, 0, "reinstall");
+  let s = readJson(settings);
+  assert.equal(s.hooks.Stop.length, 2, "ours added once, theirs kept");
+  assert.deepEqual(s.hooks.Stop[0], theirs);
+  assert.match(s.hooks.Stop[1].hooks[0].command, /claude-context-meter\/notify\.js"$/);
+  assert.deepEqual(s.hooks.PreToolUse, [pre]);
+  assert.ok(fs.existsSync(path.join(dir, "claude-context-meter", "notify.js")));
+
+  assert.equal(run(dir, "--uninstall").status, 0);
+  s = readJson(settings);
+  assert.deepEqual(s, { hooks: { Stop: [theirs], PreToolUse: [pre] } });
+});
+
+test("--no-notify installs without the hook and removes an existing one", () => {
+  const dir = tmp();
+  const settings = path.join(dir, "settings.json");
+  assert.equal(run(dir).status, 0);
+  assert.ok(readJson(settings).hooks.Stop);
+  assert.equal(run(dir, "--no-notify").status, 0);
+  assert.equal(readJson(settings).hooks, undefined);
+  assert.ok(readJson(settings).statusLine);
+});

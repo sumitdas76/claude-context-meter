@@ -1,0 +1,21 @@
+{
+  "name": "claude-context-meter",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Claude Code status line: context usage, quota remaining, cache state, cost.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.14.0",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10"
+  }
+}

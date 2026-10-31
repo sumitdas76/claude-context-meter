@@ -1,0 +1,11 @@
+{
+  "name": "claude-context-meter",
+  "owner": { "name": "sumitdas76" },
+  "plugins": [
+    {
+      "name": "claude-context-meter",
+      "source": "./",
+      "description": "Status line showing context-window usage, plan quota remaining, prompt-cache state and session cost."
+    }
+  ]
+}

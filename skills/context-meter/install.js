@@ -5,6 +5,9 @@
 //   node install.js --force      install, replacing an existing status line
 //   node install.js --uninstall  remove it (only if it is ours)
 //
+// Display flags are passed through to the status line command:
+//   --quota (show 5h/7d quota left)  --cost (show session $)  --no-legend
+//
 // Copies statusline.js to <claude dir>/claude-context-meter/ so plugin
 // updates or cache cleanups can't break the path, backs up settings.json,
 // and writes the new settings atomically. Honours CLAUDE_CONFIG_DIR.
@@ -69,14 +72,17 @@ function planUninstall(settings) {
   return next;
 }
 
-function install({ force = false } = {}) {
+const DISPLAY_FLAGS = ["--quota", "--cost", "--no-legend"];
+
+function install({ force = false, display = [] } = {}) {
   const dir = claudeDir();
   const settingsFile = path.join(dir, "settings.json");
   const settings = readSettings(settingsFile); // validate before touching anything
 
   const targetDir = path.join(dir, MARKER);
   const target = path.join(targetDir, "statusline.js");
-  const command = `node "${target.split(path.sep).join("/")}"`;
+  const flags = DISPLAY_FLAGS.filter((f) => display.includes(f)); // whitelist only
+  const command = [`node "${target.split(path.sep).join("/")}"`, ...flags].join(" ");
   const next = planInstall(settings, command, force);
 
   fs.mkdirSync(targetDir, { recursive: true });
@@ -103,7 +109,7 @@ if (require.main === module) {
   try {
     const msg = args.includes("--uninstall")
       ? uninstall()
-      : install({ force: args.includes("--force") });
+      : install({ force: args.includes("--force"), display: args });
     console.log(msg);
   } catch (err) {
     const known = err instanceof InstallError;

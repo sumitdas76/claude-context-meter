@@ -88,3 +88,10 @@ test("install works with no settings.json yet", () => {
   assert.equal(run(dir).status, 0);
   assert.ok(readJson(path.join(dir, "settings.json")).statusLine);
 });
+
+test("display flags pass through; unknown flags are dropped", () => {
+  const dir = tmp();
+  assert.equal(run(dir, "--quota", "--cost", "--evil;rm").status, 0);
+  const cmd = readJson(path.join(dir, "settings.json")).statusLine.command;
+  assert.match(cmd, /statusline\.js" --quota --cost$/);
+});

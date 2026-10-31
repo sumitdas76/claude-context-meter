@@ -77,10 +77,12 @@ function contextPart(d) {
 
   pct = Math.min(100, Math.round(pct));
   const tokens = used != null ? ` (${kTokens(used)}/${kTokens(size)})` : "";
-  // Status word = built-in legend, so the colour never has to be remembered.
-  const word = pct >= 75 ? "→ /compact or /clear" : pct >= 50 ? "compact soon" : "ok";
-  return `${colourFor(pct)}ctx ${bar(pct)} ${pct}%${tokens} ${word}${RESET}`;
+  return `${colourFor(pct)}ctx ${bar(pct)} ${pct}%${tokens}${RESET}`;
 }
+
+/** Always-visible key so the bar colour never has to be remembered. */
+const LEGEND =
+  `${GREEN}●${RESET} ok ${YELLOW}●${RESET} compact soon ` + `${RED}●${RESET} /compact or /clear`;
 
 /** "5h 77% left (2h10m)" per window, plus "low"/"very low" words; omitted for API-key users. */
 function quotaPart(d, nowMs) {
@@ -111,20 +113,32 @@ function cachePart(d, nowMs) {
   return expired ? `${YELLOW}cache cold → /compact or /clear${RESET}` : null;
 }
 
+const DEFAULTS = { legend: true, quota: false, cost: false };
+
+/** Options from command-line flags: --quota, --cost, --no-legend. */
+function parseFlags(argv) {
+  return {
+    legend: !argv.includes("--no-legend"),
+    quota: argv.includes("--quota"),
+    cost: argv.includes("--cost"),
+  };
+}
+
 /** Build the full status line from Claude Code's session JSON. */
-function render(d, nowMs = Date.now()) {
+function render(d, nowMs = Date.now(), opts = DEFAULTS) {
   d = d && typeof d === "object" ? d : {};
   const parts = [d.model?.display_name || "Claude", contextPart(d)];
-  const quota = quotaPart(d, nowMs);
+  if (opts.legend) parts.push(LEGEND);
+  const quota = opts.quota ? quotaPart(d, nowMs) : null;
   if (quota) parts.push(quota);
   const cost = d.cost?.total_cost_usd;
-  if (typeof cost === "number") parts.push(`${DIM}$${cost.toFixed(2)}${RESET}`);
+  if (opts.cost && typeof cost === "number") parts.push(`${DIM}$${cost.toFixed(2)}${RESET}`);
   const cache = cachePart(d, nowMs);
   if (cache) parts.push(cache);
   return parts.join(" | ");
 }
 
-module.exports = { render, timeUntil, bar };
+module.exports = { render, parseFlags, timeUntil, bar };
 
 if (require.main === module) {
   let raw = "";
@@ -138,7 +152,7 @@ if (require.main === module) {
       // not JSON: render defaults
     }
     try {
-      process.stdout.write(render(d));
+      process.stdout.write(render(d, Date.now(), parseFlags(process.argv.slice(2))));
     } catch {
       process.stdout.write("Claude | ctx --");
     }

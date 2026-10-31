@@ -1,45 +1,47 @@
 # claude-context-meter
 
 A small, dependency-free status line for [Claude Code](https://code.claude.com)
-that shows how much of your context window and plan quota you've used, so you
-know when to `/compact`, `/clear` or switch to a cheaper model.
+that shows how full your context window is, with a colour key right beside
+it, so you know when to `/compact` or `/clear`.
 
 ```
-Opus | ctx ██████░░░░ 62% (124k/200k) compact soon | 5h 19% left (1h30m) very low → cheaper /model 7d 70% left (3d11h) | $2.50
+Opus | ctx ████░░░░░░ 39% (79k/200k) | ● ok ● compact soon ● /compact or /clear
 ```
 
-Every coloured part carries a **status word**, so the line is its own
-legend: you never need to remember what a colour means.
+The three dots are a built-in legend (green, yellow, red), so you never need
+to remember what the bar colour means.
 
-| Part         | What it means                                                                                                                              |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `ctx` bar    | Context window used, with a `→ /compact or /clear` hint from 75%. Handles 200k and 1M windows.                                             |
-| `5h` / `7d`  | Plan quota **remaining** and time until it resets. Pro, Max and Ultra plans only; hidden for API-key users.                                |
-| `$1.23`      | Session cost so far.                                                                                                                       |
-| `cache cold` | The prompt cache has expired, so your next message re-reads the whole conversation at full price. A good moment to `/compact` or `/clear`. |
+## What the colours mean
 
-### What the colours mean
+| Bar colour | Context used | What to do                                                                                |
+| ---------- | ------------ | ----------------------------------------------------------------------------------------- |
+| 🟢 Green   | Under 50%    | **ok**: keep working.                                                                     |
+| 🟡 Yellow  | 50–74%       | **compact soon**: finish the current step, then `/compact`.                               |
+| 🔴 Red     | 75% or more  | **/compact or /clear** now: `/clear` if the task is done, else `/compact <what to keep>`. |
 
-| Colour    | Context bar (`ctx`) | Word shown             | Quota (`5h` / `7d`) | Word shown                  | What to do                                                                                                                                  |
-| --------- | ------------------- | ---------------------- | ------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🟢 Green  | Under 50% used      | `ok`                   | More than 50% left  | _(none)_                    | Nothing, keep working.                                                                                                                      |
-| 🟡 Yellow | 50–74% used         | `compact soon`         | 26–50% left         | `low`                       | Plan a break point: finish the current step, then `/compact`. For quota, consider a cheaper `/model` for simple work.                       |
-| 🔴 Red    | 75% or more used    | `→ /compact or /clear` | 25% or less left    | `very low → cheaper /model` | Context: `/compact <what to keep>` now, or `/clear` if the task is done. Quota: switch to a cheaper model or wait for the reset time shown. |
+Other things that can appear:
 
-Other parts of the line:
+- **🟡 `cache cold → /compact or /clear`** appears only when the prompt cache
+  has expired, typically after a long pause: your next message re-reads the
+  whole conversation at full price.
+- **`ctx --`** means there's no usage data yet, for example before the first
+  reply or right after `/compact`.
 
-- **🟡 `cache cold → /compact or /clear`** is always yellow. It appears only
-  when the prompt cache has expired, typically after a long pause.
-- **Grey `$1.23`** is the session cost, dimmed because it is information, not
-  a warning.
-- **`ctx --`** (no colour) means there is no usage data yet, for example
-  before the first reply or right after `/compact`.
+The meter handles 200k and 1M context windows. Colours follow your terminal
+theme.
 
-Colours use standard terminal colours, so the exact shade follows your
-terminal theme.
+### Optional parts
 
-Why another status line? It's one ~150-line Node file you can read in a
-minute, has no dependencies, never breaks your status bar (bad data shows
+Turn these on with flags (see [Install](#install)):
+
+| Flag          | Adds                                                                                                                                                                                                      |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--quota`     | Plan quota **left** for the 5-hour and 7-day windows with reset time, e.g. `5h 42% left (53m) low`. Words: `low` (26–50% left), `very low → cheaper /model` (25% or less). Pro, Max and Ultra plans only. |
+| `--cost`      | Session cost so far, e.g. `$2.69`.                                                                                                                                                                        |
+| `--no-legend` | Hides the colour key.                                                                                                                                                                                     |
+
+Why another status line? It's one ~170-line Node file you can read in a few
+minutes, has no dependencies, never breaks your status bar (bad data shows
 `--`), and the installer won't overwrite a status line you already have.
 
 ## Install
@@ -53,8 +55,9 @@ Requires Node.js 18+.
 /plugin install claude-context-meter@claude-context-meter
 ```
 
-Then ask Claude: _"install the context meter"_. The bundled `context-meter`
-skill runs the installer and asks before replacing an existing status line.
+Then ask Claude: _"install the context meter"_ (optionally _"with quota and
+cost"_). The bundled `context-meter` skill runs the installer and asks before
+replacing an existing status line.
 
 **Manually:**
 
@@ -67,13 +70,15 @@ The installer copies `statusline.js` to `~/.claude/claude-context-meter/`,
 backs up `settings.json` to `settings.json.bak-claude-context-meter`, and adds
 the `statusLine` entry. It honours `CLAUDE_CONFIG_DIR`.
 
-| Flag          | Effect                                                                               |
-| ------------- | ------------------------------------------------------------------------------------ |
-| _(none)_      | Install. Exits with code 2 and changes nothing if another status line is configured. |
-| `--force`     | Replace an existing status line (after backing up).                                  |
-| `--uninstall` | Remove it, only if the configured status line is this one.                           |
+| Installer flag                     | Effect                                                                               |
+| ---------------------------------- | ------------------------------------------------------------------------------------ |
+| _(none)_                           | Install. Exits with code 2 and changes nothing if another status line is configured. |
+| `--force`                          | Replace an existing status line (after backing up).                                  |
+| `--uninstall`                      | Remove it, only if the configured status line is this one.                           |
+| `--quota`, `--cost`, `--no-legend` | Passed through to the status line (see [Optional parts](#optional-parts)).           |
 
-Restart Claude Code if the meter doesn't appear on the next refresh.
+Re-run the installer to change flags. Restart Claude Code if the meter doesn't
+appear on the next refresh.
 
 ## Develop
 

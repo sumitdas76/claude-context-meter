@@ -77,11 +77,12 @@ function contextPart(d) {
 
   pct = Math.min(100, Math.round(pct));
   const tokens = used != null ? ` (${kTokens(used)}/${kTokens(size)})` : "";
-  const hint = pct >= 75 ? " → /compact or /clear" : "";
-  return `${colourFor(pct)}ctx ${bar(pct)} ${pct}%${tokens}${hint}${RESET}`;
+  // Status word = built-in legend, so the colour never has to be remembered.
+  const word = pct >= 75 ? "→ /compact or /clear" : pct >= 50 ? "compact soon" : "ok";
+  return `${colourFor(pct)}ctx ${bar(pct)} ${pct}%${tokens} ${word}${RESET}`;
 }
 
-/** "5h 77% left (2h10m)" per window; omitted for API-key users. */
+/** "5h 77% left (2h10m)" per window, plus "low"/"very low" words; omitted for API-key users. */
 function quotaPart(d, nowMs) {
   const rl = d.rate_limits;
   if (!rl) return null;
@@ -95,7 +96,8 @@ function quotaPart(d, nowMs) {
     const used = Math.min(100, Math.max(0, w.used_percentage));
     const left = Math.round(100 - used);
     const reset = typeof w.resets_at === "number" ? ` (${timeUntil(w.resets_at, nowMs)})` : "";
-    out.push(`${colourFor(used)}${label} ${left}% left${reset}${RESET}`);
+    const word = used >= 75 ? " very low → cheaper /model" : used >= 50 ? " low" : "";
+    out.push(`${colourFor(used)}${label} ${left}% left${reset}${word}${RESET}`);
   }
   return out.length ? out.join(" ") : null;
 }

@@ -25,12 +25,21 @@ test("context from used_percentage and current_usage", () => {
       NOW,
     ),
   );
-  assert.equal(out, "Opus 5.5 | ctx ████░░░░░░ 39% (79k/200k) | $1.23");
+  assert.equal(out, "Opus 5.5 | ctx ████░░░░░░ 39% (79k/200k) ok | $1.23");
 });
 
-test("hint appears at 75% and above", () => {
-  const out = plain(render({ context_window: { used_percentage: 80 } }, NOW));
-  assert.match(out, /ctx ████████░░ 80% → \/compact or \/clear/);
+test("context status word matches its colour band", () => {
+  const ctx = (p) => render({ context_window: { used_percentage: p } }, NOW);
+  assert.match(ctx(49), /\x1b\[32mctx .* 49% ok/); // eslint-disable-line no-control-regex
+  assert.match(ctx(50), /\x1b\[33mctx .* 50% compact soon/); // eslint-disable-line no-control-regex
+  assert.match(ctx(80), /\x1b\[31mctx ████████░░ 80% → \/compact or \/clear/); // eslint-disable-line no-control-regex
+});
+
+test("quota status words: none, low, very low", () => {
+  const q = (used) => plain(render({ rate_limits: { five_hour: { used_percentage: used } } }, NOW));
+  assert.match(q(30), /5h 70% left$/);
+  assert.match(q(60), /5h 40% left low$/);
+  assert.match(q(90), /5h 10% left very low → cheaper \/model$/);
 });
 
 test("1M context window is respected", () => {

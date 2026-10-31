@@ -5,8 +5,11 @@ that shows how much of your context window and plan quota you've used, so you
 know when to `/compact`, `/clear` or switch to a cheaper model.
 
 ```
-Opus | ctx ████░░░░░░ 39% (79k/200k) | 5h 77% left (2h10m) 7d 59% left (3d4h) | $1.23
+Opus | ctx ██████░░░░ 62% (124k/200k) compact soon | 5h 19% left (1h30m) very low → cheaper /model 7d 70% left (3d11h) | $2.50
 ```
+
+Every coloured part carries a **status word**, so the line is its own
+legend: you never need to remember what a colour means.
 
 | Part         | What it means                                                                                                                              |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -17,11 +20,11 @@ Opus | ctx ████░░░░░░ 39% (79k/200k) | 5h 77% left (2h10m) 7
 
 ### What the colours mean
 
-| Colour    | Context bar (`ctx`) | Quota (`5h` / `7d`) | What to do                                                                                                                                  |
-| --------- | ------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🟢 Green  | Under 50% used      | More than 50% left  | Nothing, keep working.                                                                                                                      |
-| 🟡 Yellow | 50–74% used         | 26–50% left         | Plan a break point: finish the current step, then `/compact`. For quota, consider a cheaper `/model` for simple work.                       |
-| 🔴 Red    | 75% or more used    | 25% or less left    | Context: `/compact <what to keep>` now, or `/clear` if the task is done. Quota: switch to a cheaper model or wait for the reset time shown. |
+| Colour    | Context bar (`ctx`) | Word shown             | Quota (`5h` / `7d`) | Word shown                  | What to do                                                                                                                                  |
+| --------- | ------------------- | ---------------------- | ------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🟢 Green  | Under 50% used      | `ok`                   | More than 50% left  | _(none)_                    | Nothing, keep working.                                                                                                                      |
+| 🟡 Yellow | 50–74% used         | `compact soon`         | 26–50% left         | `low`                       | Plan a break point: finish the current step, then `/compact`. For quota, consider a cheaper `/model` for simple work.                       |
+| 🔴 Red    | 75% or more used    | `→ /compact or /clear` | 25% or less left    | `very low → cheaper /model` | Context: `/compact <what to keep>` now, or `/clear` if the task is done. Quota: switch to a cheaper model or wait for the reset time shown. |
 
 Other parts of the line:
 

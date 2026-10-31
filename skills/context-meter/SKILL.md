@@ -25,7 +25,11 @@ removes the status line if it is this meter.
 
 ## What the user will see
 
-`Opus | ctx ████░░░░░░ 39% (79k/200k) | 5h 77% left (2h10m) 7d 59% left (3d4h) | $1.23`
+`Opus | ctx ██████░░░░ 62% (124k/200k) compact soon | 5h 19% left (1h30m) very low → cheaper /model 7d 70% left (3d11h) | $2.50`
+
+Each coloured part carries a status word (`ok`, `compact soon`,
+`→ /compact or /clear`; quota `low`, `very low → cheaper /model`), so the
+line explains itself.
 
 - Context bar: green under 50% used; yellow 50–74% (plan to `/compact` at
   the next break point); red 75%+ with a `→ /compact or /clear` hint (act now).
